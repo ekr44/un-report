@@ -2,6 +2,7 @@
 #January 18th, 2023
 
 library(tidyverse)
+library(readr)
 gapminder_data <- read_csv("data/gapminder_data.csv")
 summarize(gapminder_data, averageLifeExp=mean(lifeExp), medianLifeExp=median(lifeExp))
 
@@ -50,3 +51,52 @@ gapminder_data%>%
   select(country, continent, year, lifeExp)%>%
   pivot_wider(names_from = year, values_from = lifeExp)%>%
   View()
+
+
+
+#challenge (unfinished)
+gapminder_data%>%
+  filter(year != 2007)%>%
+  filter(Americas)
+
+
+
+#working w messy data
+read_csv("data/co2-un-data.csv", skip = 1)
+#renaming columns/pivoting to make new columns
+co2_emissions_dirty<-read_csv("data/co2-un-data.csv", skip =2, 
+         col_names = c("region", "country", "year", "series", "value", "footnotes", "source"))
+co2_emissions_dirty%>%
+  select(country, year, series, value)%>%
+  mutate(series = recode(series, 
+                         "Emissions (thousand metric tons of carbon dioxide)" = "ttl_emissions", 
+                         "Emissions per capita (metric tons of carbon dioxide)" = "per_cap_emissions"))%>%
+  pivot_wider(names_from = series, values_from = value)
+
+#combining co2 data and pop data
+# 1.look for common column titles across the two tables (country, year)
+# 2. filter co2 data for only 2005, get rid of the year column, and filter the pop data table for 2007 and we will combine them
+co2_emissions_dirty<-read_csv("data/co2-un-data.csv", skip =2, 
+                              col_names = c("region", "country", "year", "series", "value", "footnotes", "source"))
+
+co2_emissions<-co2_emissions_dirty%>%
+  select(country, year, series, value)%>%
+  mutate(series = recode(series, 
+                         "Emissions (thousand metric tons of carbon dioxide)" = "ttl_emissions", 
+                         "Emissions per capita (metric tons of carbon dioxide)" = "per_cap_emissions"))%>%
+  pivot_wider(names_from = series, values_from = value)%>%
+  filter(year == 2005)%>%
+  select(-year)
+
+gapminder_data_2007<-read_csv("data/gapminder_data.csv")%>%
+  filter(year == 2007)%>%
+  select(country, pop, lifeExp, gdpPercap)
+
+#joining 2 data frames together (using column that they have in common)
+
+inner_join(co2_emissions, gapminder_data_2007, by = "country")
+
+anti_join(gapminder_data_2007, co2_emissions, by = "country")
+
+full_join(co2_emissions, gapminder_data_2007)%>%View()
+         
