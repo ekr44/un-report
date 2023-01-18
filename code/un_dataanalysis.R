@@ -54,10 +54,11 @@ gapminder_data%>%
 
 
 
-#challenge (unfinished)
+#challenge 
 gapminder_data%>%
-  filter(year != 2007)%>%
-  filter(Americas)
+  filter(year == 2007)%>%
+  filter("Americas")%>%
+  select(-year, -continent)
 
 
 
